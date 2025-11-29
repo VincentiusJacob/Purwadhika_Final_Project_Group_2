@@ -3,9 +3,5 @@ final_project/
 venv/
 .env
 
-# Ignore Database 
-*.db
-*.sqlite3
-
 # Ignore file sistem Mac
 .DS_Store
