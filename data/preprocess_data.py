@@ -106,7 +106,7 @@ def main():
     # Ekstrak Work Style (Remote/Hybrid)
     df['work_style'] = df['location'].apply(extract_work_style)
     
-    # Standarisasi lokasi kerja
+    # Standarisasi lokasi kerjaNe
     df['clean_location'] = df['location'].apply(clean_location_name)
 
     # Handle Missing Values

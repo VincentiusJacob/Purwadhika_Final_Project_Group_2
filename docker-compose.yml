@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        LIVEKIT_URL: ${LIVEKIT_URL}
+        LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+        LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+        OPENAI_API_KEY: ${OPENAI_API_KEY}
+    image: purwadhika-final:latest
+    command:
+      [
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port=8501",
+        "--server.address=0.0.0.0",
+      ]
+    ports:
+      - "8501:8501"
+    env_file: .env
+
+  interview-agent:
+    image: purwadhika-final:latest
+    command: ["python", "agents/interview_agent.py", "dev"]
+    env_file: .env
+
+  supervisor-worker:
+    image: purwadhika-final:latest
+    command: ["python", "agents/supervisor_worker.py"]
+    env_file: .env
