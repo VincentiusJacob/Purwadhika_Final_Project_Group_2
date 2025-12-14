@@ -18,4 +18,6 @@ COPY . .
 
 RUN python download_model.py 
 
-USER nobody
+# USER nobody
+
+EXPOSE 8000 8501
