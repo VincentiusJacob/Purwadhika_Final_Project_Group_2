@@ -1,71 +1,102 @@
 import streamlit as st
+import requests
 import os
-from livekit import api
 from dotenv import load_dotenv
 
 load_dotenv()
 
-LIVEKIT_URL = os.getenv("LIVEKIT_URL")
-LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
-LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
-
-if not all([LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET]):
-    st.error("Missing LiveKit environment variables.")
-    st.stop()
+API_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+LIVEKIT_URL = os.getenv("LIVEKIT_URL") 
 
 st.set_page_config(page_title="AI Mock Interview", layout="centered")
+st.title("🎙️ Interview with Sarah")
 
-@st.cache_data
-def get_token(room: str, user: str):
-    return api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET) \
-        .with_identity(user).with_name(user) \
-        .with_grants(api.VideoGrants(room_join=True, room=room,
-                                     can_publish=True, can_subscribe=True,
-                                     can_publish_data=True)).to_jwt()
+if "token" not in st.session_state:
+    st.session_state.token = None
 
-@st.cache_data
-def client_html(token: str, url: str) -> str:
+name = st.text_input("Your Name", value="Candidate")
+
+if st.button("Start Session"):
+    if not name:
+        st.error("Name is required")
+    else:
+        try:
+            room_name = f"interview-{name.lower().replace(' ', '-')}"
+            payload = {"room_name": room_name, "participant_name": name}
+            
+            res = requests.post(f"{API_URL}/get-livekit-token", json=payload)
+            
+            if res.status_code == 200:
+                st.session_state.token = res.json()["token"]
+                st.success("Connected to Sarah! Click 'Start Audio' below.")
+            else:
+                st.error(f"Failed to get token: {res.text}")
+        except Exception as e:
+            st.error(f"Connection Error: {e}")
+
+
+def client_html(token, server_url):
     return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta charset="utf-8"/>
-        </head>
-        <body style="margin:0;background:#111;color:#fff;font-family:-apple-system;display:flex;align-items:center;justify-content:center;height:100vh;">
-        <div style="text-align:center">
-        <h2>AI Mock Interview</h2>
-        <p id="status">Ready</p>
-        <button id="btn" onclick="run()" style="padding:12px 24px;border:none;border-radius:24px;background:#ef4444;color:#fff;font-size:16px;cursor:pointer">Start Interview</button>
-        </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body {{ font-family: sans-serif; background: #0e1117; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        button {{ padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }}
+        button:disabled {{ background: #555; cursor: not-allowed; }}
+        #status {{ font-size: 18px; font-weight: bold; margin-bottom: 10px; }}
+    </style>
+    </head>
+    <body>
+        <div id="status">Ready to Connect</div>
+        <button id="btn" onclick="startCall()">Start Audio</button>
+
         <script type="module">
-        import {{Room,createLocalTracks}} from 'https://esm.sh/livekit-client@latest';
-        const btn=document.getElementById('btn'),status=document.getElementById('status');
-        let room,connected=0;
-        async function run(){{
-        if(connected){{room.disconnect();connected=0;btn.textContent='Start Interview';status.textContent='Ready';return;}}
-        btn.disabled=1;btn.textContent='Connecting...';status.textContent='Connecting...';
-        try{{
-            room=new Room();await room.connect('{url}','{token}');
-            const [mic]=await createLocalTracks({{audio:true}});
-            await room.localParticipant.publishTrack(mic);
-            room.on('trackSubscribed',(t)=>{{if(t.kind==='audio'){{t.attach().play();status.textContent='Sarah speaking';}}}});
-            room.on('trackUnsubscribed',()=>status.textContent='Your turn');
-            room.on('disconnected',()=>{{connected=0;btn.textContent='Start Interview';status.textContent='Ready';}});
-            connected=1;btn.textContent='End Interview';btn.disabled=0;status.textContent='Connected';
-        }}catch(e){{alert(e.message);btn.disabled=0;btn.textContent='Start Interview';status.textContent='Failed';}}
-        }}
+            import {{ Room, RoomEvent, createLocalTracks }} from "https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.esm.mjs";
+
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
+            let room;
+
+            window.startCall = async () => {{
+                btn.disabled = true;
+                btn.innerText = "Connecting...";
+                
+                try {{
+                    room = new Room();
+                    // Connect ke LiveKit Cloud pakai Token dari Backend
+                    await room.connect('{server_url}', '{token}');
+                    
+                    // Nyalakan Mic User
+                    const tracks = await createLocalTracks({{ audio: true, video: false }});
+                    await room.localParticipant.publishTrack(tracks[0]);
+
+                    // Dengar Suara Sarah
+                    room.on(RoomEvent.TrackSubscribed, (track) => {{
+                        if (track.kind === 'audio') {{
+                            const el = track.attach();
+                            document.body.appendChild(el);
+                            status.innerText = "Sarah is speaking 🟢";
+                        }}
+                    }});
+                    
+                    room.on(RoomEvent.TrackUnsubscribed, () => {{
+                        status.innerText = "Your turn to speak 🎤";
+                    }});
+
+                    status.innerText = "Connected! Say Hello to Sarah.";
+                    btn.innerText = "Connected";
+                    
+                }} catch (e) {{
+                    status.innerText = "Error: " + e.message;
+                    btn.disabled = false;
+                    btn.innerText = "Retry";
+                }}
+            }}
         </script>
-        </body>
-        </html>
+    </body>
+    </html>
     """
 
-st.title("AI Mock Interview")
-name = st.text_input("Your name", value="John Doe")
-if st.button("Create Session", type="primary"):
-    if name.strip():
-        room = f"interview-{name.lower().replace(' ', '-')}"
-        token = get_token(room, name)
-        st.success("Session ready")
-        st.components.v1.html(client_html(token, LIVEKIT_URL), height=400)
-    else:
-        st.error("Name cannot be empty")
+if st.session_state.token:
+    st.components.v1.html(client_html(st.session_state.token, LIVEKIT_URL), height=300)

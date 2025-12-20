@@ -1,14 +1,22 @@
 version: "3.9"
 services:
+  # 1. BACKEND (FastAPI + LangGraph Logic)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-backend
+    command: ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    env_file: .env
+
+  # 2. FRONTEND (Streamlit)
   frontend:
     build:
       context: .
-      args:
-        LIVEKIT_URL: ${LIVEKIT_URL}
-        LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
-        LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
-        OPENAI_API_KEY: ${OPENAI_API_KEY}
-    image: purwadhika-final:latest
+      dockerfile: Dockerfile
+    container_name: agent-frontend
     command:
       [
         "streamlit",
@@ -20,13 +28,16 @@ services:
     ports:
       - "8501:8501"
     env_file: .env
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
 
+  # 3. VOICE AGENT (LiveKit Worker)
   interview-agent:
-    image: purwadhika-final:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-voice-worker
     command: ["python", "agents/interview_agent.py", "dev"]
-    env_file: .env
-
-  supervisor-worker:
-    image: purwadhika-final:latest
-    command: ["python", "agents/supervisor_worker.py"]
     env_file: .env
