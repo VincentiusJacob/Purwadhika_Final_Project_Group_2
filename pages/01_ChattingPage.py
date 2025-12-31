@@ -10,7 +10,7 @@ st.write("Tanya apapun tentang pekerjaan di Indonesia")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-        
+
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -49,3 +49,4 @@ if prompt := st.chat_input("Ask about a job..."):
         except Exception as e:
             status_container.update(label="Connection Failed", state="error")
             st.error(f"Connection failed: {e}")
+

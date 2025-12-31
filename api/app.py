@@ -6,10 +6,18 @@ import traceback
 from livekit import api as livekit_api
 import os
 from dotenv import load_dotenv
+import sqlite3
 
 load_dotenv()
 
 app = FastAPI()
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(current_dir, '..', 'data', 'jobs_database.db')
+
+conn = sqlite3.connect(db_path, check_same_thread=False)
+conn.row_factory = sqlite3.Row
+cursor = conn.cursor()
 
 supervisor_agent = get_supervisor()
 
@@ -22,6 +30,7 @@ class TokenRequest(BaseModel):
     participant_name: str
 
 
+# ================================================= RETRIEVE JOB INFORMATION FROM VECTOR DB / DIRECT ANSWER =========================================
 @app.post("/job-information")
 async def job_information(request: ChatRequest):
     try :
@@ -54,6 +63,7 @@ async def job_information(request: ChatRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+# ======================================================= GET LIVEKIT TOKEN ===================================================
 @app.post("/get-livekit-token")
 async def get_livekit_token(req: TokenRequest):
     try:
@@ -81,6 +91,27 @@ async def get_livekit_token(req: TokenRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ====================================================== GET JOBS FROM SQL DB ===============================================
+
+@app.get("/get-all-jobs")
+async def get_all_jobs():
     
+    cursor.execute("SELECT * FROM jobs")
+    rows = cursor.fetchall()
+    return [
+        {
+            "job_title": row['job_title'],
+            "company_name": row['company_name'],
+            "location": row['clean_location'],
+            "work_style": row['work_style'],
+            "work_type": row['work_type'],
+            "min_salary": row['min_salary'],
+            "max_salary": row['max_salary'],
+            "job_description": row['job_description']
+        }
+        for row in rows
+    ]
     
 
+   

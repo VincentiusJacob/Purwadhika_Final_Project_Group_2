@@ -1,5 +1,6 @@
 import pymupdf
 import os
+import json
 import time
 from hashlib import md5
 from typing_extensions import TypedDict
@@ -15,6 +16,7 @@ from dotenv import load_dotenv
 # TypedDict definition of State
 class State(TypedDict):
     summary: str
+    user_name: str
     cv_contents: str
     best_jobs: list[dict]
     file_bytes: bytes
@@ -91,9 +93,14 @@ def read_doc(State: State):
     cv_contents = convert_bytes(byte_file)
 
     system_prompt = SystemMessage(
-        f"""You are a CV analyzer. Your role is to analyze and provide a summary analysis of the CV that adequately encapsulates 
-        the prospect's persona with the following format:
+        f"""You are a CV analyzer. Your role is to extract the user's fullname and provide a summary analysis of the CV that adequately encapsulates 
+        the prospect's persona.
 
+        You must output a strictly valid JSON object with exactly two keys:
+        1. "name": The full name of the candidate found in the CV. If not found, use "Candidate".
+        2. "summary": The summary analysis string following the format below:
+
+        Username: 
         Preferred Companies: (if available)
         Preferred Location: (based on their stated location or past location history)
         Preferred Salary Range:
@@ -101,6 +108,7 @@ def read_doc(State: State):
         Strenghts:
         Skills:
         General assessment:
+        Work Experience:
         
         This summary will be used for semantic searching against a vector database that stores job information across Indonesia. 
         Output only the summary analysis as a single string. Example:
@@ -113,8 +121,17 @@ def read_doc(State: State):
         )
     
     response = model.invoke([system_prompt]).content
-    # print(response) # Test
-    return {"summary": response, "cv_contents": cv_contents}
+
+    try:
+        clean_json = response.replace("```json", "").replace("```", "")
+        data = json.loads(clean_json)
+        user_name = data.get("name", "Candidate")
+        summary = data.get("summary", "")
+    except:
+        user_name = "Candidate"
+        summary = response
+
+    return {"summary": response, "user_name": user_name, "cv_contents": cv_contents}
 
 
 def construct_vector(State: State):
@@ -165,7 +182,7 @@ def find_jobs(State: State):
             'salary': metadata["salary"],
             'company_name': metadata["company_name"],
             'job_title': metadata["job_title"],
-            'job_desc': job_desc
+            'job_description': job_desc
         }
 
         list_of_jobs.append(Job)

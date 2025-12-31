@@ -1,6 +1,8 @@
 # TEMPORARY FOR TESTING
 import sys
 from pathlib import Path
+import os
+import json
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -8,7 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 import streamlit as st
-from data.global_sate import state as global_state
+from data.global_state import state as global_state, save_state
 from typing_extensions import TypedDict
 from agents.document_agent import analysis_compile
 
@@ -23,6 +25,8 @@ class State(TypedDict):
     assessment: str
 
 # ======================================================= Internal Variables =======================================================
+
+DB_FILE = "user_data.json"
 
 MBTI = "ENTP-T"
 
@@ -176,14 +180,12 @@ st.markdown(
     unsafe_allow_html=True
     )
 
-
 # Upload CV
 uploaded_file = st.file_uploader(
     "📄 Upload CV…",
     type=["pdf", "docx"],
     label_visibility="collapsed",
 )
-
 
 # STOP rendering until upload happens
 if not uploaded_file:
@@ -195,6 +197,7 @@ if uploaded_file is not None:
 
     initial_state: State = {
     "summary": "",
+    "user_name": "",
     "cv_contents": "",
     "best_jobs": [],
     "file_bytes": file_as_bytes,
@@ -203,18 +206,20 @@ if uploaded_file is not None:
     }
 
     request = analysis_compile(initial_state)
-    # print(request["assessment"], request["best_jobs"][0])
 
     # Update global state values
     global_state["user_summary"] = request["summary"]
-    global_state["best_jobs"] = request["best_jobs"]
+    global_state["user_name"] = request["user_name"]
     global_state["session_id"] = request["session_id"]
     global_state["assessment"] = request["assessment"]
 
+    save_state()
+
     MBTI = global_state["assessment"][0:7]
     ASSESSMENT = global_state["assessment"][7:]
-    DUMMY_JOBS = global_state["best_jobs"]
+    DUMMY_JOBS = request["best_jobs"]
 
+    
 
 # Personality Insight Card
 st.markdown(
@@ -257,27 +262,63 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-for job in DUMMY_JOBS:
-    st.markdown(
-        f"""
-        <div class="job-card">
-            <div class="job-title">{job["job_title"]}</div>
-            <div class="job-meta">
-                {job["company_name"]} &nbsp;|&nbsp;
-                {job["work_type"]} &nbsp;|&nbsp;
-                {job["salary"]} &nbsp;|&nbsp;
-                {job["location"]}
+st.markdown("""
+<style>
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #0E1117; 
+        border: 1px solid #303030;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    div.stButton > button {
+        width: 100%;
+        background-color: #FF4B4B;
+        color: white;
+        border: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+for i, job in enumerate(DUMMY_JOBS):
+
+    with st.container(border=True):
+        st.markdown(f"""
+            <div style="margin-bottom: 4px;">
+                <h3 style="margin:0; font-size:20px;">{job["job_title"]}</h3>
+                <div style="color: grey; font-size: 14px; margin-top: 5px;">
+                    {job["company_name"]} &nbsp;|&nbsp;
+                    {job["work_type"]} &nbsp;|&nbsp;
+                    {job["salary"]} &nbsp;|&nbsp;
+                    {job["location"]}
+                </div>
             </div>
-            <details>
-                <summary>▼ Read more</summary>
-                <div class="job-desc">
-                    {job["job_desc"]}
+        """, unsafe_allow_html=True)
+
+        if st.button("Prepare for this job", key=f"job_btn_{i}"):
+            global_state['prefered_jobs'] = {
+                "job_title": job['job_title'],
+                "company_name": job['company_name'],
+                "job_description": job['job_description']
+            }
+
+            st.session_state['prefered_jobs'] = global_state['prefered_jobs']
+            save_state()
+      
+            st.session_state['last_consulted_job_title'] = "" 
+            
+            st.success("Data is updated, You are ready for consulting and practice interview.")
+
+        st.markdown(f"""
+            <details style="margin-top: 15px; cursor: pointer; margin-bottom:10px;">
+                <summary style="color: #4DA6FF;">▼ Read more</summary>
+                <div style="margin-top: 10px; font-size: 14px; line-height: 1.6;">
+                    {job["job_description"]}
                 </div>
             </details>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     # try:
@@ -300,3 +341,5 @@ if __name__ == "__main__":
     #     pass
     pass
     
+
+    # Step 1: Find out where did the user_json was made.
