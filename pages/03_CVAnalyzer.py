@@ -333,7 +333,9 @@ for i, job in enumerate(DUMMY_JOBS):
                     {job["job_description"]}
                 </div>
             </details>
-        """, unsafe_allow_html=True)
+        """, 
+        unsafe_allow_html=True
+    )
 
 
 
