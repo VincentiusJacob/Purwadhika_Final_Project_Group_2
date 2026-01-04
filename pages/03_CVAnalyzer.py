@@ -300,8 +300,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-for i, job in enumerate(DUMMY_JOBS):
-
+for job in DUMMY_JOBS:
     with st.container(border=True):
         st.markdown(f"""
             <div style="margin-bottom: 4px;">
@@ -309,22 +308,12 @@ for i, job in enumerate(DUMMY_JOBS):
                 <div style="color: grey; font-size: 14px; margin-top: 5px;">
                     {job["company_name"]} &nbsp;|&nbsp;
                     {job["work_type"]} &nbsp;|&nbsp;
+                    {job["work_style"]} &nbsp;|&nbsp;
                     {job["salary"]} &nbsp;|&nbsp;
                     {job["location"]}
                 </div>
             </div>
         """, unsafe_allow_html=True)
-
-        if st.button("Prepare for this job", key=f"job_btn_{i}"):
-            st.session_state['prefered_jobs'] = {
-                "job_title": job['job_title'],
-                "company_name": job['company_name'],
-                "job_description": job['job_description']
-            }
-      
-            st.session_state['last_consulted_job_title'] = "" 
-            
-            st.success("Data is updated, You are ready for consulting and practice interview.")
 
         st.markdown(f"""
             <details style="margin-top: 15px; cursor: pointer; margin-bottom:10px;">
@@ -336,15 +325,6 @@ for i, job in enumerate(DUMMY_JOBS):
         """, 
         unsafe_allow_html=True
     )
-
-
-
-# Show button to proceed to next step
-st.markdown('<div class="bottom-right-button">', unsafe_allow_html=True)
-if st.button("Proceed", use_container_width=False):
-    st.switch_page("pages/02_JobSearch.py")
-st.markdown("</div>", unsafe_allow_html=True)
-
 
 
 # Show button to proceed to next step

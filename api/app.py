@@ -61,7 +61,7 @@ def job_searcher(request: JobSearchRequest):
 
 
 
-# ================================================= RETRIEVE JOB INFORMATION FROM VECTOR DB / DIRECT ANSWER =========================================
+# ==================================== RETRIEVE JOB INFORMATION FROM VECTOR DB / DIRECT ANSWER ====================================
 @app.post("/job-information")
 async def job_information(request: ChatRequest):
     try :

@@ -153,28 +153,63 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-for job in temp_jobs:
-    st.markdown(
-        f"""
-        <div class="job-card">
-            <div class="job-title">{job["job_title"]}</div>
-            <div class="job-meta">
-                {job["company_name"]} &nbsp;|&nbsp;
-                {job["work_type"]} &nbsp;|&nbsp;
-                {job["work_style"]} &nbsp;|&nbsp;
-                {job["salary"]} &nbsp;|&nbsp;
-                {job["location"]}
+st.markdown("""
+<style>
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #0E1117; 
+        border: 1px solid #303030;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    div.stButton > button {
+        width: 100%;
+        background-color: #FF4B4B;
+        color: white;
+        border: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+for i, job in enumerate(temp_jobs):
+    with st.container(border=True):
+        st.markdown(f"""
+            <div style="margin-bottom: 4px;">
+                <h3 style="margin:0; font-size:20px;">{job["job_title"]}</h3>
+                <div style="color: grey; font-size: 14px; margin-top: 5px;">
+                    {job["company_name"]} &nbsp;|&nbsp;
+                    {job["work_type"]} &nbsp;|&nbsp;
+                    {job["work_style"]} &nbsp;|&nbsp;
+                    {job["salary"]} &nbsp;|&nbsp;
+                    {job["location"]}
+                </div>
             </div>
-            <details>
-                <summary>▼ Read more</summary>
-                <div class="job-desc">
-                    {job["job_desc"]}
+        """, unsafe_allow_html=True)
+
+        if st.button("Prepare for this job", key=f"job_btn_{i}"):
+            st.session_state['prefered_jobs'] = {
+                "job_title": job['job_title'],
+                "company_name": job['company_name'],
+                "job_description": job['job_description']
+            }
+      
+            st.session_state['last_consulted_job_title'] = "" 
+            
+            st.success("Data is updated, You are ready for consulting and practice interview.")
+            st.switch_page("pages/04_AIConsultant.py")
+
+        st.markdown(f"""
+            <details style="margin-top: 15px; cursor: pointer; margin-bottom:10px;">
+                <summary style="color: #4DA6FF;">▼ Read more</summary>
+                <div style="margin-top: 10px; font-size: 14px; line-height: 1.6;">
+                    {job["job_description"]}
                 </div>
             </details>
-        </div>
-        """,
-        unsafe_allow_html=True,
+        """, 
+        unsafe_allow_html=True
     )
+
 
 if not temp_jobs:
     left_co, cent_co, last_co = st.columns([1, 2, 1])

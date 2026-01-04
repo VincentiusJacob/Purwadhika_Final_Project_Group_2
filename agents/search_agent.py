@@ -130,7 +130,7 @@ def RAG_query(raw_parameters: dict, _query: str):
             'work_style': metadata["work_style"],
             'location': metadata["location"],
             'salary': metadata["salary"],
-            'job_desc': job_desc,
+            'job_description': job_desc,
         }
 
         list_of_jobs.append(Job)
@@ -198,7 +198,7 @@ def SQL_query(raw_parameters: dict):
             'work_style': row["work_style"],
             'location': row["location"],
             'salary': f"""{row["min_salary"]} - {row["max_salary"]}""",
-            'job_desc': row["job_description"],
+            'job_description': row["job_description"],
         }
 
         jobs.append(job)
