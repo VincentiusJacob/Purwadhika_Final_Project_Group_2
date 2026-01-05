@@ -86,108 +86,148 @@ st.set_page_config(
 )
 st.title("Analyze your CV")
 
-
 # Global CSS
 st.markdown(
     """
     <style>
-    body {
-        background-color: #0f1220;
+    :root {
+        --bg-main: #0b0f14;
+        --bg-surface: #121826;
+        --bg-card: #161d2f;
+
+        --text-main: #e8ebf3;
+        --text-muted: #9aa3b2;
+
+        --accent: #6c8cff;
+        --accent-hover: #7f9bff;
+        --accent-soft: rgba(108, 140, 255, 0.15);
+
+        --border-soft: rgba(255,255,255,0.06);
+        --radius-lg: 18px;
+        --radius-md: 14px;
     }
 
-    .upload-card {
-        background: #5a5f73;
-        padding: 22px;
-        border-radius: 999px;
-        text-align: center;
-        margin-bottom: 30px;
+    section[data-testid="stSidebar"] {
+        background-color: var(--bg-surface);
     }
 
-    .insight-card {
-        background: #2f3446;
+    html, body, .stApp {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+    }
+
+    .block-container {
+        max-width: 900px;
+        padding-top: 2.5rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Insight / surface cards */
+    .surface {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-lg);
         padding: 28px;
-        border-radius: 22px;
         margin-bottom: 40px;
     }
 
-    .insight-grid {
-        display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 20px;
-        align-items: start;
-    }
-
-    .mbti {
-        font-size: 42px;
-        font-weight: 700;
-        color: white;
-    }
-
-    .divider {
-        width: 1px;
-        background: #6f7388;
-        height: 100%;
-    }
-
-    .assessment {
-        color: #cfd3e0;
-        line-height: 1.6;
-    }
-
+    /* Section titles */
     .section-title {
         text-align: center;
-        font-size: 36px;
+        font-size: 34px;
         font-weight: 700;
-        color: white;
-        margin-bottom: 30px;
+        margin-bottom: 32px;
     }
 
+    /* Job card */
     .job-card {
-        background: #3a3f52;
-        padding: 26px;
-        border-radius: 22px;
-        margin-bottom: 22px;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-lg);
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        transition: transform 0.15s ease, border 0.15s ease;
+    }
+
+    .job-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
     }
 
     .job-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: white;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
     }
 
     .job-meta {
-        color: #b7bccb;
+        margin-top: 6px;
         font-size: 14px;
-        margin-bottom: 12px;
+        color: var(--text-muted);
     }
 
-    details > summary {
+    /* Job description dropdown */
+    .job-details {
+        margin-top: 14px;
+    }
+
+    .job-details summary {
         cursor: pointer;
-        list-style: none;
-        color: #cfd3e0;
         font-size: 14px;
+        font-weight: 500;
+        color: var(--accent);
+        list-style: none;
+        display: flex;
+        gap: 6px;
+        align-items: center;
     }
 
-    details > summary::-webkit-details-marker {
+    .job-details summary::-webkit-details-marker {
         display: none;
     }
 
-    .job-desc {
-        color: #cfd3e0;
-        line-height: 1.6;
-        margin-top: 10px;
+    .job-details summary::before {
+        content: "▸";
+        transition: transform 0.2s ease;
     }
 
+    .job-details[open] summary::before {
+        transform: rotate(90deg);
+    }
+
+    .job-details-content {
+        margin-top: 12px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: var(--accent);
+        color: #0b0f14;
+        border-radius: var(--radius-md);
+        border: none;
+        font-weight: 600;
+        padding: 0.6rem 1.3rem;
+    }
+
+    .stButton > button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    /* Floating proceed button */
     .bottom-right-button {
         position: fixed;
         bottom: 24px;
         right: 24px;
-        z-index: 9999;
+        z-index: 999;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 # Upload CV
 uploaded_file = st.file_uploader(
@@ -243,32 +283,18 @@ DUMMY_JOBS = st.session_state["best_jobs"]
 # Personality Insight Card
 st.markdown(
     f"""
-    <div style="
-        background:#2f3446;
-        padding:32px;
-        border-radius:22px;
-        margin-bottom:40px;
-    ">
-        <div style="
-            font-size:42px;
-            font-weight:800;
-            color:white;
-            margin-bottom:8px;
-        ">
+    <div class="surface">
+        <div style="font-size:42px; font-weight:800; margin-bottom:8px;">
             {MBTI}
-        </div> 
-        <p style="
-            color:#cfd3e0;
-            line-height:1.7;
-            font-size:16px;
-            margin:0;
-        ">
+        </div>
+        <p style="color:var(--text-muted); line-height:1.7; font-size:16px; margin:0;">
             {ASSESSMENT}
         </p>
     </div>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
+
 
 
 # Recommended Jobs
@@ -281,50 +307,29 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown("""
-<style>
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #0E1117; 
-        border: 1px solid #303030;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-    }
-
-    div.stButton > button {
-        width: 100%;
-        background-color: #FF4B4B;
-        color: white;
-        border: none;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 for job in DUMMY_JOBS:
-    with st.container(border=True):
-        st.markdown(f"""
-            <div style="margin-bottom: 4px;">
-                <h3 style="margin:0; font-size:20px;">{job["job_title"]}</h3>
-                <div style="color: grey; font-size: 14px; margin-top: 5px;">
-                    {job["company_name"]} &nbsp;|&nbsp;
-                    {job["work_type"]} &nbsp;|&nbsp;
-                    {job["work_style"]} &nbsp;|&nbsp;
-                    {job["salary"]} &nbsp;|&nbsp;
-                    {job["location"]}
-                </div>
+    st.markdown(
+        f"""
+        <div class="job-card">
+            <div class="job-title">{job["job_title"]}</div>
+            <div class="job-meta">
+                {job["company_name"]} &nbsp;|&nbsp;
+                {job["work_type"]} &nbsp;|&nbsp;
+                {job["work_style"]} &nbsp;|&nbsp;
+                {job["salary"]} &nbsp;|&nbsp;
+                {job["location"]}
             </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-            <details style="margin-top: 15px; cursor: pointer; margin-bottom:10px;">
-                <summary style="color: #4DA6FF;">▼ Read more</summary>
-                <div style="margin-top: 10px; font-size: 14px; line-height: 1.6;">
+            <details class="job-details">
+                <summary>Read more</summary>
+                <div class="job-details-content">
                     {job["job_description"]}
                 </div>
             </details>
-        """, 
+        </div>
+        """,
         unsafe_allow_html=True
     )
+
 
 
 # Show button to proceed to next step

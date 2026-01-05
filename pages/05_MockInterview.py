@@ -17,7 +17,84 @@ preference_job = st.session_state.get('prefered_jobs', {})
 username = global_state["user_name"]
 
 st.title("🎙️ Interview with Sarah")
+# Global CSS
+st.markdown(
+    """
+    <style>
+    :root {
+        --bg-main: #0b0f14;
+        --bg-surface: #121826;
+        --bg-card: #161d2f;
 
+        --text-main: #e8ebf3;
+        --text-muted: #9aa3b2;
+
+        --accent: #6c8cff;
+        --accent-hover: #7f9bff;
+        --accent-soft: rgba(108, 140, 255, 0.15);
+
+        --border-soft: rgba(255,255,255,0.06);
+        --radius-lg: 18px;
+        --radius-md: 14px;
+    }
+
+    /* App background */
+    html, body, .stApp {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+    }
+
+    /* Centered layout polish */
+    .block-container {
+        max-width: 900px;
+        padding-top: 2.5rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-soft);
+    }
+
+    section[data-testid="stSidebar"] button {
+        background: transparent;
+        color: var(--text-muted);
+        border-radius: 10px;
+    }
+
+    section[data-testid="stSidebar"] button:hover,
+    section[data-testid="stSidebar"] button[aria-selected="true"] {
+        background-color: var(--accent-soft);
+        color: var(--text-main);
+        font-weight: 600;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: var(--accent);
+        color: #0b0f14;
+        border-radius: var(--radius-md);
+        border: none;
+        font-weight: 600;
+        padding: 0.6rem 1.3rem;
+    }
+
+    .stButton > button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    /* Alerts */
+    div[data-testid="stAlert"] {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 if preference_job.get('job_title') == None:
     st.warning("⚠️ You need to analyze your CV first AND select your prefereced job to generate the necessary data for this feature.")
 else: 
