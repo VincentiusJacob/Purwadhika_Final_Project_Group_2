@@ -127,5 +127,11 @@ async def my_agent(ctx: JobContext):
     )
 
 if __name__ == "__main__":
+
     threading.Thread(target=start_health_check_server, daemon=True).start()
+    
+    if len(sys.argv) == 1:
+        print("⚠️ No command provided. Defaulting to 'start'...")
+        sys.argv.append("start")
+
     cli.run_app(server)

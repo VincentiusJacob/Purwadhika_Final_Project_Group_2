@@ -287,7 +287,6 @@ if "analysis_done" not in st.session_state:
     }
 
     save_user_data(mongo_payload)
-    st.toast("CV Data saved to Cloud Database!", icon="☁️")
 
 
 # Update local variables

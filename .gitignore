@@ -31,4 +31,6 @@ build/
 *.egg-info/
 
 # -- Ignore Venv --
-echo "final_project/" >> .gitignore
+echo "final_project/" >> .gitignorefinal_project/
+user_data.json
+final_project/
